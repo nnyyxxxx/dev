@@ -1,6 +1,13 @@
 #!/bin/sh -e
 
-# shellcheck disable=SC2034
+# Make sure that echo is posix compliant
+echo() {
+  if [ ! "$BASH_VERSION" = "" ]; then
+    /usr/bin/env echo "$@"
+  else
+    /usr/bin/env echo "$@"
+  fi
+}
 
 RC='\033[0m'
 RED='\033[31m'
@@ -34,7 +41,7 @@ checkAURHelper() {
                 AUR_HELPER="yay"
                 AUR_HELPER_CHECKED=true
             else
-                echo -e "${RED}Failed to install AUR helper.${RC}"
+                echo "${RED}Failed to install AUR helper.${RC}"
                 exit 1
             fi
         fi
@@ -54,7 +61,7 @@ checkEscalationTool() {
             fi
         done
 
-        echo -e "${RED}Can't find a supported escalation tool${RC}"
+        echo "${RED}Can't find a supported escalation tool${RC}"
         exit 1
     fi
 }
@@ -82,7 +89,7 @@ checkPackageManager() {
     done
 
     if [ -z "${PACKAGER}" ]; then
-        echo -e "${RED}Can't find a supported package manager${RC}"
+        echo "${RED}Can't find a supported package manager${RC}"
         exit 1
     fi
 }

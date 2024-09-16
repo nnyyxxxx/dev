@@ -17,23 +17,23 @@ set_resolutions() {
     
     while true; do
         clear
-        echo -e "${BLUE}=========================================${RESET}"
-        echo -e "${BLUE}  Monitor Configuration${RESET}"
-        echo -e "${BLUE}=========================================${RESET}"
-        echo -e "${YELLOW}Choose a monitor to configure:${RESET}"
+        echo "${BLUE}=========================================${RESET}"
+        echo "${BLUE}  Monitor Configuration${RESET}"
+        echo "${BLUE}=========================================${RESET}"
+        echo "${YELLOW}Choose a monitor to configure:${RESET}"
         for i in "${!monitor_array[@]}"; do
-            echo -e "$((i + 1)). ${CYAN}${monitor_array[i]}${RESET}"
+            echo "$((i + 1)). ${CYAN}${monitor_array[i]}${RESET}"
         done
 
         read -p "Enter the choice (or 'q' to quit): " monitor_choice
 
         if [[ "$monitor_choice" == "q" ]]; then
-            echo -e "${RED}Exiting...${RESET}"
+            echo "${RED}Exiting...${RESET}"
             return
         fi
 
         if ! [[ "$monitor_choice" =~ ^[0-9]+$ ]] || (( monitor_choice < 1 )) || (( monitor_choice > ${#monitor_array[@]} )); then
-            echo -e "${RED}Invalid selection. Please try again.${RESET}"
+            echo "${RED}Invalid selection. Please try again.${RESET}"
             read -p "Press [Enter] to continue..."
             continue
         fi
@@ -52,23 +52,23 @@ set_resolutions() {
         done < "$temp_res_file"
 
         clear
-        echo -e "${BLUE}=========================================${RESET}"
-        echo -e "${BLUE}  Resolution Configuration for ${CYAN}$monitor_name${RESET}"
-        echo -e "${BLUE}=========================================${RESET}"
-        echo -e "${YELLOW}Choose resolution for $monitor_name:${RESET}"
+        echo "${BLUE}=========================================${RESET}"
+        echo "${BLUE}  Resolution Configuration for ${CYAN}$monitor_name${RESET}"
+        echo "${BLUE}=========================================${RESET}"
+        echo "${YELLOW}Choose resolution for $monitor_name:${RESET}"
         awk '{print $1 ". " $2}' "$temp_res_file"
 
         while true; do
             read -p "Enter the choice (or 'q' to quit): " resolution_choice
 
             if [[ "$resolution_choice" == "q" ]]; then
-                echo -e "${RED}Exiting...${RESET}"
+                echo "${RED}Exiting...${RESET}"
                 rm "$temp_res_file"
                 return
             fi
 
             if ! [[ "$resolution_choice" =~ ^[0-9]+$ ]] || (( resolution_choice < 1 )) || (( resolution_choice > ${#resolution_map[@]} )); then
-                echo -e "${RED}Invalid selection. Please try again.${RESET}"
+                echo "${RED}Invalid selection. Please try again.${RESET}"
                 continue
             fi
 
@@ -77,11 +77,11 @@ set_resolutions() {
 
             read -p "Set resolution for $monitor_name to $selected_resolution? (y/n): " confirm
             if [[ "$confirm" =~ ^[Yy]$ ]]; then
-                echo -e "${GREEN}Setting resolution for $monitor_name to $selected_resolution${RESET}"
+                echo "${GREEN}Setting resolution for $monitor_name to $selected_resolution${RESET}"
                 execute_command "xrandr --output $monitor_name --mode $selected_resolution"
                 break
             else
-                echo -e "${RED}Action canceled. Please choose a different resolution.${RESET}"
+                echo "${RED}Action canceled. Please choose a different resolution.${RESET}"
             fi
         done
 

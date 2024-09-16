@@ -229,7 +229,7 @@ echo -ne "
     select_option "${options[@]}"
     disk=${options[$?]%|*}
 
-    echo -e "\n${disk%|*} selected \n"
+    echo "\n${disk%|*} selected \n"
         export DISK=${disk%|*}
 
     drivessd
@@ -618,9 +618,9 @@ fi
 # set kernel parameter for adding splash screen
 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="[^"]*/& splash /' /etc/default/grub
 
-echo -e "Installing CyberRe Grub theme..."
+echo "Installing CyberRe Grub theme..."
 THEME_DIR="/boot/grub/themes/CyberRe"
-echo -e "Creating the theme directory..."
+echo "Creating the theme directory..."
 mkdir -p "${THEME_DIR}"
 
 # Clone the theme
@@ -635,14 +635,14 @@ rm -rf themes
 rm -rf .git
 
 echo "CyberRe theme has been cloned to ${THEME_DIR}"
-echo -e "Backing up Grub config..."
+echo "Backing up Grub config..."
 cp -an /etc/default/grub /etc/default/grub.bak
-echo -e "Setting the theme as the default..."
+echo "Setting the theme as the default..."
 grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
 echo "GRUB_THEME=\"${THEME_DIR}/theme.txt\"" >> /etc/default/grub
-echo -e "Updating grub..."
+echo "Updating grub..."
 grub-mkconfig -o /boot/grub/grub.cfg
-echo -e "All set!"
+echo "All set!"
 
 echo -ne "
 -------------------------------------------------------------------------

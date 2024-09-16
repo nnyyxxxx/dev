@@ -35,7 +35,7 @@ check() {
     local message=$2
 
     if [ $exit_code -ne 0 ]; then
-        echo -e "${RED}ERROR: $message${RC}"
+        echo "${RED}ERROR: $message${RC}"
         exit 1
     fi
 }

@@ -37,10 +37,10 @@ colored_echo() {
     local color=$1
     local text=$2
     case $color in
-        red) echo -e "\033[31m$text\033[0m" ;;
-        green) echo -e "\033[32m$text\033[0m" ;;
-        yellow) echo -e "\033[33m$text\033[0m" ;;
-        blue) echo -e "\033[34m$text\033[0m" ;;
+        red) echo "\033[31m$text\033[0m" ;;
+        green) echo "\033[32m$text\033[0m" ;;
+        yellow) echo "\033[33m$text\033[0m" ;;
+        blue) echo "\033[34m$text\033[0m" ;;
         *) echo "$text" ;;
     esac
 }

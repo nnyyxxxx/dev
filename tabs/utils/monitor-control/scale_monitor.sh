@@ -4,9 +4,9 @@
 
 # Function to scale smaller monitors to the highest resolution of a bigger monitor
 scale_monitors() {
-    echo -e "${BLUE}=========================================${RESET}"
-    echo -e "${BLUE}  Scale Monitors to Highest Resolution${RESET}"
-    echo -e "${BLUE}=========================================${RESET}"
+    echo "${BLUE}=========================================${RESET}"
+    echo "${BLUE}  Scale Monitors to Highest Resolution${RESET}"
+    echo "${BLUE}=========================================${RESET}"
 
     monitor_list=$(detect_connected_monitors)
     IFS=$'\n' read -r -a monitor_array <<<"$monitor_list"
@@ -29,15 +29,15 @@ scale_monitors() {
         fi
     done
 
-    echo -e "${CYAN}Highest resolution found: ${max_width}x${max_height}${RESET}"
+    echo "${CYAN}Highest resolution found: ${max_width}x${max_height}${RESET}"
 
     # Scale all monitors to the maximum resolution
     for monitor in "${monitor_array[@]}"; do
-        echo -e "${CYAN}Scaling $monitor to ${max_width}x${max_height}${RESET}"
+        echo "${CYAN}Scaling $monitor to ${max_width}x${max_height}${RESET}"
         execute_command "xrandr --output $monitor --scale-from ${max_width}x${max_height}"
     done
 
-    echo -e "${GREEN}Scaling complete. All monitors are now scaled to ${max_width}x${max_height}.${RESET}"
+    echo "${GREEN}Scaling complete. All monitors are now scaled to ${max_width}x${max_height}.${RESET}"
 }
 
 # Call the scale_monitors function

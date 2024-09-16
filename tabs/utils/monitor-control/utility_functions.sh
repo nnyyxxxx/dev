@@ -27,10 +27,10 @@ colored_echo() {
     local color=$1
     local text=$2
     case $color in
-    red) echo -e "\033[31m$text\033[0m" ;;
-    green) echo -e "\033[32m$text\033[0m" ;;
-    yellow) echo -e "\033[33m$text\033[0m" ;;
-    blue) echo -e "\033[34m$text\033[0m" ;;
+    red) echo "\033[31m$text\033[0m" ;;
+    green) echo "\033[32m$text\033[0m" ;;
+    yellow) echo "\033[33m$text\033[0m" ;;
+    blue) echo "\033[34m$text\033[0m" ;;
     *) echo "$text" ;;
     esac
 }
@@ -68,7 +68,7 @@ get_unique_resolutions() {
     remaining_resolutions=$(comm -23 <(echo "$available_resolutions" | sort) <(echo "$filtered_standard_resolutions" | sort))
     
     # Combine filtered standard resolutions and remaining resolutions, and limit to 10 results
-    echo -e "$filtered_standard_resolutions\n$remaining_resolutions" | head -n 10
+    echo "$filtered_standard_resolutions\n$remaining_resolutions" | head -n 10
 }
 
 # Function to prompt for confirmation

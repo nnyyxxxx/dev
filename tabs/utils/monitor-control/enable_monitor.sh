@@ -16,36 +16,36 @@ enable_monitor() {
     IFS=$'\n' read -r -a monitor_array <<<"$monitor_list"
 
     clear
-    echo -e "${BLUE}=========================================${RESET}"
-    echo -e "${BLUE}  Enable Monitor${RESET}"
-    echo -e "${BLUE}=========================================${RESET}"
-    echo -e "${YELLOW}Choose a monitor to enable:${RESET}"
+    echo "${BLUE}=========================================${RESET}"
+    echo "${BLUE}  Enable Monitor${RESET}"
+    echo "${BLUE}=========================================${RESET}"
+    echo "${YELLOW}Choose a monitor to enable:${RESET}"
     for i in "${!monitor_array[@]}"; do
-        echo -e "$((i + 1)). ${CYAN}${monitor_array[i]}${RESET}"
+        echo "$((i + 1)). ${CYAN}${monitor_array[i]}${RESET}"
     done
 
     read -p "Enter the number of the monitor: " monitor_choice
 
     if ! [[ "$monitor_choice" =~ ^[0-9]+$ ]] || (( monitor_choice < 1 )) || (( monitor_choice > ${#monitor_array[@]} )); then
-        echo -e "${RED}Invalid selection.${RESET}"
+        echo "${RED}Invalid selection.${RESET}"
         return
     fi
 
     monitor_name="${monitor_array[monitor_choice - 1]}"
 
     if confirm_action "Enable ${CYAN}$monitor_name${RESET}?"; then
-        echo -e "${GREEN}Enabling $monitor_name${RESET}"
+        echo "${GREEN}Enabling $monitor_name${RESET}"
         execute_command "xrandr --output $monitor_name --auto"
-        echo -e "${GREEN}Monitor $monitor_name enabled successfully.${RESET}"
+        echo "${GREEN}Monitor $monitor_name enabled successfully.${RESET}"
     else
-        echo -e "${RED}Action canceled.${RESET}"
+        echo "${RED}Action canceled.${RESET}"
     fi
 }
 
 # Function to prompt for confirmation
 confirm_action() {
     local action="$1"
-    echo -e "${BOLD}${YELLOW}$action${RESET}"
+    echo "${BOLD}${YELLOW}$action${RESET}"
     read -p "Are you sure? (y/n): " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         return 0

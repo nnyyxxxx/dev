@@ -704,7 +704,7 @@ impl AppState {
                 .map(|node| node.name.as_str())
                 .collect::<Vec<_>>();
 
-            let prompt = ConfirmPrompt::new(&cmd_names[..]);
+            let prompt = ConfirmPrompt::new(&cmd_names[..], self.theme);
             self.focus = Focus::ConfirmationPrompt(Float::new(Box::new(prompt), 40, 40));
         } else {
             self.go_to_selected_dir();
@@ -718,7 +718,7 @@ impl AppState {
             .map(|node| node.command.clone())
             .collect();
 
-        let command = RunningCommand::new(commands);
+        let command = RunningCommand::new(commands, self.theme);
         self.spawn_float(command, 80, 80);
         self.selected_commands.clear();
     }

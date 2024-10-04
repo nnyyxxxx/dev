@@ -1,4 +1,4 @@
-use crate::{float::FloatContent, hint::Shortcut};
+use crate::{float::FloatContent, hint::Shortcut, theme::Theme};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use linutil_core::Command;
 use oneshot::{channel, Receiver};
@@ -38,6 +38,7 @@ pub struct RunningCommand {
     /// Only set after the process has ended
     status: Option<ExitStatus>,
     scroll_offset: usize,
+    theme: Theme,
 }
 
 impl FloatContent for RunningCommand {
@@ -56,19 +57,20 @@ impl FloatContent for RunningCommand {
                 .title_top(Line::from("Running the command....").centered())
                 .title_style(Style::default().reversed())
                 .title_bottom(Line::from("Press Ctrl-C to KILL the command"))
+                .style(Style::default().bg(self.theme.background_color()).fg(self.theme.text_color()))
         } else {
             // Display a block with the command's exit status
             let mut title_line = if self.get_exit_status().success() {
                 Line::from(
                     Span::default()
                         .content("SUCCESS!")
-                        .style(Style::default().fg(Color::Green).reversed()),
+                        .style(Style::default().fg(self.theme.success_color()).reversed()),
                 )
             } else {
                 Line::from(
                     Span::default()
                         .content("FAILED!")
-                        .style(Style::default().fg(Color::Red).reversed()),
+                        .style(Style::default().fg(self.theme.fail_color()).reversed()),
                 )
             };
 
@@ -81,6 +83,7 @@ impl FloatContent for RunningCommand {
             Block::default()
                 .borders(Borders::ALL)
                 .title_top(title_line.centered())
+                .style(Style::default().bg(self.theme.background_color()).fg(self.theme.text_color()))
         };
 
         // Process the buffer and create the pseudo-terminal widget
@@ -148,7 +151,7 @@ impl FloatContent for RunningCommand {
 }
 
 impl RunningCommand {
-    pub fn new(commands: Vec<Command>) -> Self {
+    pub fn new(commands: Vec<Command>, theme: Theme) -> Self {
         let pty_system = NativePtySystem::default();
 
         // Build the command based on the provided Command enum variant
@@ -236,6 +239,7 @@ impl RunningCommand {
             writer,
             status: None,
             scroll_offset: 0,
+            theme,
         }
     }
 

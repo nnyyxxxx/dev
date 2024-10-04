@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::{float::FloatContent, hint::Shortcut};
+use crate::{float::FloatContent, hint::Shortcut, theme::Theme};
 
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
@@ -19,10 +19,11 @@ pub struct ConfirmPrompt {
     pub names: Box<[String]>,
     pub status: ConfirmStatus,
     scroll: usize,
+    theme: Theme,
 }
 
 impl ConfirmPrompt {
-    pub fn new(names: &[&str]) -> Self {
+    pub fn new(names: &[&str], theme: Theme) -> Self {
         let max_count_str = format!("{}", names.len());
         let names = names
             .iter()
@@ -40,6 +41,7 @@ impl ConfirmPrompt {
             names,
             status: ConfirmStatus::None,
             scroll: 0,
+            theme,
         }
     }
 
@@ -63,8 +65,9 @@ impl FloatContent for ConfirmPrompt {
             .title(" Confirm selections ")
             .title_bottom(" [y] to continue, [n] to abort ")
             .title_alignment(Alignment::Center)
-            .title_style(Style::default().bold())
-            .style(Style::default());
+            .title_style(Style::default().fg(self.theme.text_color()))
+            .border_style(Style::default().fg(self.theme.border_color()))
+            .style(Style::default().bg(self.theme.background_color()));
 
         frame.render_widget(block.clone(), area);
 
@@ -76,12 +79,17 @@ impl FloatContent for ConfirmPrompt {
             .skip(self.scroll)
             .map(|p| {
                 let span = Span::from(Cow::<'_, str>::Borrowed(p));
-                Line::from(span).style(Style::default())
+                Line::from(span).style(Style::default().fg(self.theme.text_color()))
             })
             .collect::<Text>();
 
         frame.render_widget(Clear, inner_area);
-        frame.render_widget(List::new(paths_text), inner_area);
+        frame.render_widget(
+            List::new(paths_text)
+                .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
+                .style(Style::default().bg(self.theme.background_color())),
+            inner_area
+        );
     }
 
     fn handle_key_event(&mut self, key: &KeyEvent) -> bool {

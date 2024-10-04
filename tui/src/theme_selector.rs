@@ -125,7 +125,7 @@ impl FloatContent for ThemeSelector {
             KeyCode::Enter => {
                 return true;
             }
-            KeyCode::Esc => {
+            KeyCode::Esc | KeyCode::Char('q') => {
                 self.selected_theme = self.initial_theme;
                 return true;
             }
@@ -145,7 +145,7 @@ impl FloatContent for ThemeSelector {
                 Shortcut::new("Next theme", ["j", "Down"]),
                 Shortcut::new("Previous theme", ["k", "Up"]),
                 Shortcut::new("Select theme", ["Enter"]),
-                Shortcut::new("Cancel", ["Esc"]),
+                Shortcut::new("Cancel", ["Esc", "q"]),
             ]),
         )
     }

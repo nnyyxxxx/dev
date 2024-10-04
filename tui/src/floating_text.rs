@@ -263,10 +263,7 @@ impl FloatContent for FloatingText {
                     let bg_spans: Vec<Span> = spans
                         .into_iter()
                         .map(|span| {
-                            Span::styled(
-                                span.content,
-                                span.style.bg(self.theme.background_color())
-                            )
+                            Span::styled(span.content, span.style.bg(self.theme.background_color()))
                         })
                         .collect();
 

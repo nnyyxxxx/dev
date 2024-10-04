@@ -4,7 +4,7 @@ use std::{
     io::{Cursor, Read as _, Seek, SeekFrom, Write as _},
 };
 
-use crate::{float::FloatContent, hint::Shortcut};
+use crate::{float::FloatContent, hint::Shortcut, theme::Theme};
 
 use linutil_core::Command;
 
@@ -13,7 +13,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     layout::Rect,
     style::{Style, Stylize},
-    text::Line,
+    text::{Line, Span},
     widgets::{Block, Borders, Clear, List},
     Frame,
 };
@@ -36,6 +36,7 @@ pub struct FloatingText {
     v_scroll: usize,
     h_scroll: usize,
     mode_title: &'static str,
+    theme: Theme,
 }
 
 macro_rules! style {
@@ -130,7 +131,7 @@ fn get_lines_owned(s: &str) -> Vec<String> {
 }
 
 impl FloatingText {
-    pub fn new(text: String, mode: FloatingTextMode) -> Self {
+    pub fn new(text: String, mode: FloatingTextMode, theme: Theme) -> Self {
         let src = get_lines(&text)
             .into_iter()
             .map(|s| s.to_string())
@@ -143,10 +144,11 @@ impl FloatingText {
             max_line_width,
             v_scroll: 0,
             h_scroll: 0,
+            theme,
         }
     }
 
-    pub fn from_command(command: &Command, mode: FloatingTextMode) -> Option<Self> {
+    pub fn from_command(command: &Command, mode: FloatingTextMode, theme: Theme) -> Option<Self> {
         let (max_line_width, src) = match command {
             Command::Raw(cmd) => {
                 // just apply highlights directly
@@ -173,6 +175,7 @@ impl FloatingText {
             max_line_width,
             h_scroll: 0,
             v_scroll: 0,
+            theme,
         })
     }
 
@@ -217,7 +220,7 @@ impl FloatContent for FloatingText {
             .title(self.mode_title)
             .title_alignment(ratatui::layout::Alignment::Center)
             .title_style(Style::default().reversed())
-            .style(Style::default());
+            .style(Style::default().bg(self.theme.background_color()));
 
         // Draw the Block first
         frame.render_widget(block.clone(), area);
@@ -257,7 +260,17 @@ impl FloatContent for FloatingText {
                         spans.push_front(to_split.content(Cow::Owned(new_content)));
                     }
 
-                    Line::from(Vec::from(spans))
+                    let bg_spans: Vec<Span> = spans
+                        .into_iter()
+                        .map(|span| {
+                            Span::styled(
+                                span.content,
+                                span.style.bg(self.theme.background_color())
+                            )
+                        })
+                        .collect();
+
+                    Line::from(bg_spans)
                 }
             })
             .collect::<Vec<_>>();
@@ -265,7 +278,8 @@ impl FloatContent for FloatingText {
         // Create list widget
         let list = List::new(lines)
             .block(Block::default())
-            .highlight_style(Style::default().reversed());
+            .highlight_style(Style::default().reversed())
+            .style(Style::default().bg(self.theme.background_color()));
 
         // Clear the text underneath the floats rendered area
         frame.render_widget(Clear, inner_area);

@@ -8,6 +8,7 @@ use crate::{
     hint::{create_shortcut_list, Shortcut},
     running_command::RunningCommand,
     theme::Theme,
+    theme_selector::ThemeSelector,
 };
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ego_tree::NodeId;
@@ -71,6 +72,7 @@ pub enum Focus {
     List,
     FloatingWindow(Float<dyn FloatContent>),
     ConfirmationPrompt(Float<ConfirmPrompt>),
+    ThemeSelector(Float<ThemeSelector>),
 }
 
 pub struct ListEntry {
@@ -142,8 +144,7 @@ impl AppState {
 
                 hints.push(Shortcut::new("Select item above", ["k", "Up"]));
                 hints.push(Shortcut::new("Select item below", ["j", "Down"]));
-                hints.push(Shortcut::new("Next theme", ["t"]));
-                hints.push(Shortcut::new("Previous theme", ["T"]));
+                hints.push(Shortcut::new("Open theme selector", ["t"]));
 
                 if self.is_current_tab_multi_selectable() {
                     hints.push(Shortcut::new("Toggle multi-selection mode", ["v"]));
@@ -154,7 +155,7 @@ impl AppState {
                 hints.push(Shortcut::new("Previous tab", ["Shift-Tab"]));
                 hints.push(Shortcut::new("Important actions guide", ["g"]));
 
-                ("Command list", hints.into_boxed_slice())
+                ("List", hints.into_boxed_slice())
             }
 
             Focus::TabList => (
@@ -164,8 +165,7 @@ impl AppState {
                     Shortcut::new("Focus action list", ["l", "Right", "Enter"]),
                     Shortcut::new("Select item above", ["k", "Up"]),
                     Shortcut::new("Select item below", ["j", "Down"]),
-                    Shortcut::new("Next theme", ["t"]),
-                    Shortcut::new("Previous theme", ["T"]),
+                    Shortcut::new("Open theme selector", ["t"]),
                     Shortcut::new("Next tab", ["Tab"]),
                     Shortcut::new("Previous tab", ["Shift-Tab"]),
                 ]),
@@ -173,6 +173,7 @@ impl AppState {
 
             Focus::FloatingWindow(ref float) => float.get_shortcut_list(),
             Focus::ConfirmationPrompt(ref prompt) => prompt.get_shortcut_list(),
+            Focus::ThemeSelector(ref selector) => selector.get_shortcut_list(),
         }
     }
 
@@ -206,19 +207,23 @@ impl AppState {
             self.drawable = true;
         }
 
-        let label_block =
-            Block::default()
-                .borders(Borders::all())
-                .border_set(ratatui::symbols::border::Set {
-                    top_left: " ",
-                    top_right: " ",
-                    bottom_left: " ",
-                    bottom_right: " ",
-                    vertical_left: " ",
-                    vertical_right: " ",
-                    horizontal_top: "*",
-                    horizontal_bottom: "*",
-                });
+        let block_style = Style::default()
+            .bg(self.theme.background_color())
+            .fg(self.theme.text_color());
+
+        let label_block = Block::default()
+            .borders(Borders::all())
+            .border_set(ratatui::symbols::border::Set {
+                top_left: " ",
+                top_right: " ",
+                bottom_left: " ",
+                bottom_right: " ",
+                vertical_left: " ",
+                vertical_right: " ",
+                horizontal_top: "*",
+                horizontal_bottom: "*",
+            })
+            .style(block_style);
         let str1 = "Linutil ";
         let str2 = "by Chris Titus";
         let label = Paragraph::new(Line::from(vec![
@@ -242,7 +247,8 @@ impl AppState {
 
         let keybinds_block = Block::default()
             .title(format!(" {} ", keybind_scope))
-            .borders(Borders::all());
+            .borders(Borders::all())
+            .style(block_style);
 
         let keybinds = create_shortcut_list(shortcuts, keybind_render_width);
         let n_lines = keybinds.len() as u16;
@@ -286,7 +292,7 @@ impl AppState {
         };
 
         let list = List::new(tabs)
-            .block(Block::default().borders(Borders::ALL))
+            .block(Block::default().borders(Borders::ALL).style(block_style))
             .highlight_style(tab_hl_style)
             .highlight_symbol(self.theme.tab_icon());
         frame.render_stateful_widget(list, left_chunks[1], &mut self.current_tab);
@@ -321,7 +327,7 @@ impl AppState {
                 let (indicator, style) = if is_selected {
                     (self.theme.multi_select_icon(), Style::default().bold())
                 } else {
-                    ("", Style::new())
+                    ("", Style::default())
                 };
                 if *has_children {
                     Line::from(format!(
@@ -359,10 +365,10 @@ impl AppState {
             },
         ));
 
-        let style = if let Focus::List = self.focus {
-            Style::default().reversed()
+        let list_style = if let Focus::List = self.focus {
+            Style::default().reversed().fg(self.theme.focused_color())
         } else {
-            Style::new()
+            Style::default().fg(self.theme.unfocused_color())
         };
 
         let title = if self.multi_select {
@@ -380,20 +386,23 @@ impl AppState {
 
         // Create the list widget with items
         let list = List::new(items)
-            .highlight_style(style)
+            .highlight_style(list_style)
             .block(
                 Block::default()
                     .borders(Borders::ALL & !Borders::RIGHT)
                     .title(title)
-                    .title_bottom(bottom_title),
+                    .title_bottom(bottom_title)
+                    .style(block_style),
             )
+            .style(Style::default().fg(self.theme.text_color()))
             .scroll_padding(1);
         frame.render_stateful_widget(list, list_chunks[0], &mut self.selection);
 
-        let disclaimer_list = List::new(task_items).highlight_style(style).block(
+        let disclaimer_list = List::new(task_items).highlight_style(list_style).block(
             Block::default()
                 .borders(Borders::ALL & !Borders::LEFT)
-                .title(task_list_title),
+                .title(task_list_title)
+                .style(block_style),
         );
 
         frame.render_stateful_widget(disclaimer_list, list_chunks[1], &mut self.selection);
@@ -401,6 +410,7 @@ impl AppState {
         match &mut self.focus {
             Focus::FloatingWindow(float) => float.draw(frame, chunks[1]),
             Focus::ConfirmationPrompt(prompt) => prompt.draw(frame, chunks[1]),
+            Focus::ThemeSelector(selector) => selector.draw(frame, chunks[1]),
             _ => {}
         }
 
@@ -473,6 +483,13 @@ impl AppState {
                 }
             }
 
+            Focus::ThemeSelector(float) => {
+                if float.handle_key_event(key) {
+                    self.theme = float.content.selected_theme;
+                    self.focus = Focus::List;
+                }
+            }
+
             Focus::Search => match self.filter.handle_key(key) {
                 SearchAction::Exit => self.exit_search(),
                 SearchAction::Update => self.update_items(),
@@ -495,8 +512,7 @@ impl AppState {
                 }
 
                 KeyCode::Char('/') => self.enter_search(),
-                KeyCode::Char('t') => self.theme.next(),
-                KeyCode::Char('T') => self.theme.prev(),
+                KeyCode::Char('t') | KeyCode::Char('T') => self.open_theme_selector(),
                 KeyCode::Char('g') => self.toggle_task_list_guide(),
                 _ => {}
             },
@@ -509,8 +525,7 @@ impl AppState {
                 KeyCode::Enter | KeyCode::Char('l') | KeyCode::Right => self.handle_enter(),
                 KeyCode::Char('h') | KeyCode::Left => self.go_back(),
                 KeyCode::Char('/') => self.enter_search(),
-                KeyCode::Char('t') => self.theme.next(),
-                KeyCode::Char('T') => self.theme.prev(),
+                KeyCode::Char('t') | KeyCode::Char('T') => self.open_theme_selector(),
                 KeyCode::Char('g') => self.toggle_task_list_guide(),
                 KeyCode::Char('v') | KeyCode::Char('V') => self.toggle_multi_select(),
                 KeyCode::Char(' ') if self.multi_select => self.toggle_selection(),
@@ -657,7 +672,7 @@ impl AppState {
     fn enable_preview(&mut self) {
         if let Some(node) = self.get_selected_node() {
             if let Some(preview) =
-                FloatingText::from_command(&node.command, FloatingTextMode::Preview)
+                FloatingText::from_command(&node.command, FloatingTextMode::Preview, self.theme)
             {
                 self.spawn_float(preview, 80, 80);
             }
@@ -666,7 +681,11 @@ impl AppState {
 
     fn enable_description(&mut self) {
         if let Some(command_description) = self.get_selected_description() {
-            let description = FloatingText::new(command_description, FloatingTextMode::Description);
+            let description = FloatingText::new(
+                command_description,
+                FloatingTextMode::Description,
+                self.theme,
+            );
             self.spawn_float(description, 80, 80);
         }
     }
@@ -732,10 +751,19 @@ impl AppState {
 
     fn toggle_task_list_guide(&mut self) {
         self.spawn_float(
-            FloatingText::new(ACTIONS_GUIDE.to_string(), FloatingTextMode::ActionsGuide),
+            FloatingText::new(
+                ACTIONS_GUIDE.to_string(),
+                FloatingTextMode::ActionsGuide,
+                self.theme,
+            ),
             80,
             80,
         );
+    }
+
+    fn open_theme_selector(&mut self) {
+        let theme_selector = ThemeSelector::new(self.theme);
+        self.focus = Focus::ThemeSelector(Float::new(Box::new(theme_selector), 60, 60));
     }
 }
 

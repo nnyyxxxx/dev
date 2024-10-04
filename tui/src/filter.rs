@@ -87,15 +87,19 @@ impl Filter {
             Span::raw(self.search_input.iter().collect::<String>())
         };
 
-        let search_color = if self.in_search_mode {
-            theme.focused_color()
-        } else {
-            theme.unfocused_color()
-        };
+        let search_color = theme.text_color();
 
-        //Create the search bar widget
         let search_bar = Paragraph::new(display_text)
-            .block(Block::default().borders(Borders::ALL).title("Search"))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Search")
+                    .style(
+                        Style::default()
+                            .fg(theme.text_color())
+                            .bg(theme.background_color()),
+                    ),
+            )
             .style(Style::default().fg(search_color));
 
         //Render the search bar (First chunk of the screen)

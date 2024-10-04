@@ -6,6 +6,7 @@ mod hint;
 mod running_command;
 pub mod state;
 mod theme;
+mod theme_selector;
 
 use std::{
     io::{self, stdout},
